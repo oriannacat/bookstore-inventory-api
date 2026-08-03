@@ -1,0 +1,105 @@
+{
+  "info": {
+    "name": "Bookstore Inventory API",
+    "description": "Coleccion de endpoints para el sistema de gestion de inventario de librerias.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "{{base_url}}", "type": "string" },
+    { "key": "book_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Crear libro",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"El Quijote\",\n  \"author\": \"Miguel de Cervantes\",\n  \"isbn\": \"978-84-376-0494-7\",\n  \"cost_usd\": 15.99,\n  \"stock_quantity\": 25,\n  \"category\": \"Literatura Clásica\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/books/", "host": ["{{base_url}}"], "path": ["books", ""] }
+      }
+    },
+    {
+      "name": "Listar libros",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/books/", "host": ["{{base_url}}"], "path": ["books", ""] }
+      }
+    },
+    {
+      "name": "Obtener libro por ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/books/{{book_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["books", "{{book_id}}", ""]
+        }
+      }
+    },
+    {
+      "name": "Actualizar libro",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"El Quijote (2da edición)\",\n  \"author\": \"Miguel de Cervantes\",\n  \"isbn\": \"978-84-376-0494-7\",\n  \"cost_usd\": 17.50,\n  \"stock_quantity\": 30,\n  \"category\": \"Literatura Clásica\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/books/{{book_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["books", "{{book_id}}", ""]
+        }
+      }
+    },
+    {
+      "name": "Eliminar libro",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{base_url}}/books/{{book_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["books", "{{book_id}}", ""]
+        }
+      }
+    },
+    {
+      "name": "Buscar por categoria",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/books/search/?category=Literatura Clásica",
+          "host": ["{{base_url}}"],
+          "path": ["books", "search", ""],
+          "query": [{ "key": "category", "value": "Literatura Clásica" }]
+        }
+      }
+    },
+    {
+      "name": "Libros con stock bajo",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/books/low-stock/?threshold=10",
+          "host": ["{{base_url}}"],
+          "path": ["books", "low-stock", ""],
+          "query": [{ "key": "threshold", "value": "10" }]
+        }
+      }
+    },
+    {
+      "name": "Calcular precio de venta",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{base_url}}/books/{{book_id}}/calculate-price/",
+          "host": ["{{base_url}}"],
+          "path": ["books", "{{book_id}}", "calculate-price", ""]
+        }
+      }
+    }
+  ]
+}
