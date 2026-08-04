@@ -113,13 +113,24 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'EXCEPTION_HANDLER': 'inventory.exceptions.custom_exception_handler',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # This API doesn't use Django login (Session/Basic auth) at all — access is
+    # governed entirely by HasAPIKeyForWrite (see inventory/permissions.py).
+    # Leaving DRF's Session/Basic authenticators enabled by default made Swagger
+    # show a misleading lock on every endpoint, and any *invalid* credentials
+    # sent via its "Authorize" dialog would reject even public GET requests
+    # before the permission check ever ran.
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Bookstore Inventory API',
     'DESCRIPTION': (
         'API REST para gestion de inventario de librerias, con validacion de '
-        'precios en tiempo real contra tasas de cambio.'
+        'precios en tiempo real contra tasas de cambio.\n\n'
+        'Autenticacion: la lectura (GET) es siempre publica. Si el despliegue '
+        'configura la variable de entorno API_KEY, las operaciones de escritura '
+        '(POST/PUT/PATCH/DELETE) requieren el header "X-API-Key". Si no esta '
+        'configurada, la escritura tambien es publica.'
     ),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,

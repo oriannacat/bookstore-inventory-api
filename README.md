@@ -220,6 +220,23 @@ Respuesta:
 | GET    | `/docs/`     | Documentación interactiva Swagger UI                    |
 | GET    | `/schema/`   | Esquema OpenAPI en formato YAML                          |
 
+### Endpoints agregados como mejora (no pedidos en el enunciado)
+
+El enunciado pide exactamente: `POST/GET/PUT/DELETE /books/`, `GET /books/search`,
+`GET /books/low-stock` y `POST /books/{id}/calculate-price`. Todos están
+implementados tal cual. Además, se agregaron estos, sin cambiar ninguna ruta
+existente:
+
+| Endpoint | Por qué se agregó |
+|---|---|
+| `PATCH /books/{id}/` | El enunciado solo pide `PUT` (reemplazo completo). `PATCH` permite actualizar un solo campo (ej. `stock_quantity`) sin reenviar todo el libro — práctica estándar de REST, y el `ModelViewSet` de DRF ya lo trae incluido sin código extra. |
+| `GET /health/` | Los proveedores cloud (Render incluido) usan un endpoint de salud para saber si el contenedor sigue vivo y reiniciarlo si no responde. Sin esto, Render no tiene forma de detectar caídas. |
+| `GET /docs/` | Documentación interactiva (Swagger UI): permite explorar y probar cada endpoint sin salir del navegador ni depender solo de Postman. |
+| `GET /schema/` | Esquema OpenAPI en crudo que alimenta `/docs/`; también sirve para generar clientes automáticamente en otros lenguajes si hiciera falta. |
+
+Ninguno de estos interfiere con los endpoints pedidos ni cambia su contrato —
+son puramente aditivos.
+
 ## Colección de Postman
 
 En `postman/bookstore-inventory-api.postman_collection.json` se incluye la
