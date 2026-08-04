@@ -244,6 +244,13 @@ despliegue (Render).
   `development` prioriza conveniencia (SQLite, CORS abierto, `SECRET_KEY` con
   fallback); `production` falla rápido si falta `SECRET_KEY`, `ALLOWED_HOSTS`
   o `DATABASE_URL`, y fuerza HTTPS.
+- **`LOCAL_CURRENCY=EUR` por defecto**: el enunciado no especifica en qué país
+  opera la cadena de librerías ni qué moneda local usa; se eligió `EUR` porque
+  es la moneda del ejemplo de respuesta del propio PDF de la prueba
+  (`"currency": "EUR"`, consistente con `"supplier_country": "ES"` en su
+  libro de ejemplo). Es 100% configurable vía la variable de entorno
+  `LOCAL_CURRENCY` sin tocar código — por ejemplo, a `VES` para el mercado
+  venezolano.
 - **API key opt-in** en vez de autenticación obligatoria, para no romper la
   evaluación si no se configura.
 
