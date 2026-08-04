@@ -1,37 +1,51 @@
-from decimal import ROUND_HALF_UP, Decimal
+import logging
 
-from django.conf import settings
-from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.response import Response
 
+from .filters import BookFilter
 from .models import Book
+from .permissions import HasAPIKeyForWrite
 from .serializers import BookSerializer
-from .services import get_usd_exchange_rate
+from .services import calculate_price_for_book
+
+logger = logging.getLogger(__name__)
 
 
 class BookViewSet(viewsets.ModelViewSet):
+    """CRUD for Book, plus category search, low-stock lookup and price calculation.
+
+    Read access (list/retrieve/search/low-stock) is always open. Write access
+    (create/update/partial_update/destroy/calculate_price) is gated by
+    HasAPIKeyForWrite, which only enforces a key when settings.API_KEY is set.
+    """
+
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    permission_classes = [HasAPIKeyForWrite]
+
+    def _paginated_response(self, request: Request, queryset) -> Response:
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page if page is not None else queryset, many=True)
+        if page is not None:
+            return self.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='search')
-    def search(self, request):
+    def search(self, request: Request) -> Response:
         category = request.query_params.get('category')
         if not category:
             return Response(
                 {'detail': 'El parámetro "category" es requerido.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        books = self.get_queryset().filter(category__iexact=category)
-        page = self.paginate_queryset(books)
-        serializer = self.get_serializer(page if page is not None else books, many=True)
-        if page is not None:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+        books = BookFilter({'category': category}, queryset=self.get_queryset()).qs
+        return self._paginated_response(request, books)
 
     @action(detail=False, methods=['get'], url_path='low-stock')
-    def low_stock(self, request):
+    def low_stock(self, request: Request) -> Response:
         threshold_raw = request.query_params.get('threshold', 10)
         try:
             threshold = int(threshold_raw)
@@ -40,43 +54,11 @@ class BookViewSet(viewsets.ModelViewSet):
                 {'detail': 'El parámetro "threshold" debe ser un número entero.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        books = self.get_queryset().filter(stock_quantity__lte=threshold)
-        page = self.paginate_queryset(books)
-        serializer = self.get_serializer(page if page is not None else books, many=True)
-        if page is not None:
-            return self.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+        books = BookFilter({'threshold': threshold}, queryset=self.get_queryset()).qs
+        return self._paginated_response(request, books)
 
     @action(detail=True, methods=['post'], url_path='calculate-price')
-    def calculate_price(self, request, pk=None):
+    def calculate_price(self, request: Request, pk: str | None = None) -> Response:
         book = self.get_object()
-
-        exchange_rate, used_fallback = get_usd_exchange_rate(settings.LOCAL_CURRENCY)
-
-        cost_usd = Decimal(str(book.cost_usd))
-        rate = Decimal(str(exchange_rate))
-        margin = Decimal(str(settings.PROFIT_MARGIN_PERCENTAGE)) / Decimal('100')
-
-        cents = Decimal('0.01')
-        cost_local = (cost_usd * rate).quantize(cents, rounding=ROUND_HALF_UP)
-        selling_price_local = (cost_local * (Decimal('1') + margin)).quantize(
-            cents, rounding=ROUND_HALF_UP
-        )
-
-        book.selling_price_local = selling_price_local
-        book.save(update_fields=['selling_price_local', 'updated_at'])
-
-        return Response(
-            {
-                'book_id': book.id,
-                'cost_usd': float(cost_usd),
-                'exchange_rate': float(rate),
-                'cost_local': float(cost_local),
-                'margin_percentage': float(settings.PROFIT_MARGIN_PERCENTAGE),
-                'selling_price_local': float(selling_price_local),
-                'currency': settings.LOCAL_CURRENCY,
-                'used_fallback_rate': used_fallback,
-                'calculation_timestamp': timezone.now().isoformat(),
-            },
-            status=status.HTTP_200_OK,
-        )
+        result = calculate_price_for_book(book)
+        return Response(result, status=status.HTTP_200_OK)

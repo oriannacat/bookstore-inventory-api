@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 
-def validate_isbn_format(value):
+def validate_isbn_format(value: str) -> None:
     """ISBN must contain 10 or 13 digits (hyphens/spaces allowed as separators,
     trailing 'X' allowed as the ISBN-10 check digit)."""
     stripped = re.sub(r'[\s-]', '', value)
@@ -27,8 +27,8 @@ class Book(models.Model):
     selling_price_local = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    stock_quantity = models.IntegerField(validators=[MinValueValidator(0)])
-    category = models.CharField(max_length=100, blank=True, default='')
+    stock_quantity = models.IntegerField(validators=[MinValueValidator(0)], db_index=True)
+    category = models.CharField(max_length=100, blank=True, default='', db_index=True)
     supplier_country = models.CharField(max_length=2, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -36,5 +36,5 @@ class Book(models.Model):
     class Meta:
         ordering = ['id']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.title} ({self.isbn})'

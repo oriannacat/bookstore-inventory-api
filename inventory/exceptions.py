@@ -1,6 +1,10 @@
+import logging
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
+
+logger = logging.getLogger(__name__)
 
 
 class ExchangeRateServiceError(Exception):
@@ -12,14 +16,18 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
+        if response.status_code >= 500:
+            logger.error('Error %s en %s: %s', response.status_code, context['view'], exc)
         return response
 
     if isinstance(exc, ExchangeRateServiceError):
+        logger.error('Servicio de tasas de cambio no disponible: %s', exc)
         return Response(
             {'detail': str(exc) or 'Servicio de tasas de cambio no disponible.'},
             status=status.HTTP_503_SERVICE_UNAVAILABLE,
         )
 
+    logger.exception('Error no manejado en %s', context['view'], exc_info=exc)
     return Response(
         {'detail': 'Error interno del servidor.'},
         status=status.HTTP_500_INTERNAL_SERVER_ERROR,

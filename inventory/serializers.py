@@ -1,9 +1,18 @@
+from decimal import Decimal
+
 from rest_framework import serializers
 
 from .models import Book, validate_isbn_format
 
 
 class BookSerializer(serializers.ModelSerializer):
+    # Rendered as a JSON number (not a string) to match the API spec, e.g.
+    # {"cost_usd": 15.99} instead of DRF's DecimalField default {"cost_usd": "15.99"}.
+    cost_usd = serializers.DecimalField(max_digits=10, decimal_places=2, coerce_to_string=False)
+    selling_price_local = serializers.DecimalField(
+        max_digits=10, decimal_places=2, coerce_to_string=False, read_only=True
+    )
+
     class Meta:
         model = Book
         fields = [
@@ -21,7 +30,7 @@ class BookSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'selling_price_local', 'created_at', 'updated_at']
 
-    def validate_isbn(self, value):
+    def validate_isbn(self, value: str) -> str:
         validate_isbn_format(value)
         qs = Book.objects.filter(isbn=value)
         if self.instance:
@@ -30,12 +39,12 @@ class BookSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Ya existe un libro con este ISBN.')
         return value
 
-    def validate_cost_usd(self, value):
+    def validate_cost_usd(self, value: Decimal) -> Decimal:
         if value <= 0:
             raise serializers.ValidationError('cost_usd debe ser mayor a 0.')
         return value
 
-    def validate_stock_quantity(self, value):
+    def validate_stock_quantity(self, value: int) -> int:
         if value < 0:
             raise serializers.ValidationError('stock_quantity no puede ser negativo.')
         return value

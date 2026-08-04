@@ -20,7 +20,11 @@ services:
     env_file:
       - .env
     environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
       DATABASE_URL: postgres://${POSTGRES_USER:-bookstore}:${POSTGRES_PASSWORD:-bookstore}@db:5432/${POSTGRES_DB:-bookstore}
+      DB_SSL_REQUIRE: "False"
+      SECURE_SSL_REDIRECT: "False"
+      ALLOWED_HOSTS: "*"
     ports:
       - "8000:8000"
     depends_on:

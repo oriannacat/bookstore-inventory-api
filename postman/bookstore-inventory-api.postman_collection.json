@@ -4,9 +4,18 @@
     "description": "Coleccion de endpoints para el sistema de gestion de inventario de librerias.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "X-API-Key", "type": "string" },
+      { "key": "value", "value": "{{api_key}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
   "variable": [
     { "key": "base_url", "value": "{{base_url}}", "type": "string" },
-    { "key": "book_id", "value": "1", "type": "string" }
+    { "key": "book_id", "value": "1", "type": "string" },
+    { "key": "api_key", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -40,13 +49,29 @@
       }
     },
     {
-      "name": "Actualizar libro",
+      "name": "Actualizar libro (PUT - reemplazo completo)",
       "request": {
         "method": "PUT",
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"title\": \"El Quijote (2da edición)\",\n  \"author\": \"Miguel de Cervantes\",\n  \"isbn\": \"978-84-376-0494-7\",\n  \"cost_usd\": 17.50,\n  \"stock_quantity\": 30,\n  \"category\": \"Literatura Clásica\",\n  \"supplier_country\": \"ES\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/books/{{book_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["books", "{{book_id}}", ""]
+        }
+      }
+    },
+    {
+      "name": "Actualizar libro (PATCH - parcial)",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"stock_quantity\": 40\n}"
         },
         "url": {
           "raw": "{{base_url}}/books/{{book_id}}/",
@@ -99,6 +124,20 @@
           "host": ["{{base_url}}"],
           "path": ["books", "{{book_id}}", "calculate-price", ""]
         }
+      }
+    },
+    {
+      "name": "Healthcheck",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/health/", "host": ["{{base_url}}"], "path": ["health", ""] }
+      }
+    },
+    {
+      "name": "Documentacion Swagger",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base_url}}/docs/", "host": ["{{base_url}}"], "path": ["docs", ""] }
       }
     }
   ]
