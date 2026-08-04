@@ -230,10 +230,18 @@ colección con todos los endpoints (incluyendo `PATCH`), y en
 
 ## Despliegue
 
-La API se encuentra desplegada en: `<URL_DE_PRODUCCION>`
+La API se encuentra desplegada en: **https://bookstore-inventory-api-0r5j.onrender.com**
 
-Base de datos: PostgreSQL gestionado (no SQLite) en el mismo proveedor de
-despliegue (Render).
+- Documentación interactiva: https://bookstore-inventory-api-0r5j.onrender.com/docs/
+- Healthcheck: https://bookstore-inventory-api-0r5j.onrender.com/health/
+
+Base de datos: PostgreSQL gestionado (no SQLite) en Render, en la misma
+región (Ohio, US East) que el servicio web.
+
+> Nota: al estar en el plan Free de Render, el servicio "duerme" tras un
+> periodo de inactividad — la primera petición después de un rato puede
+> tardar hasta ~50 segundos en responder mientras el contenedor arranca de
+> nuevo. Las siguientes peticiones son inmediatas.
 
 ## Decisiones de diseño
 
