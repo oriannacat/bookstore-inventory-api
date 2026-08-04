@@ -12,6 +12,10 @@ class BookSerializer(serializers.ModelSerializer):
     selling_price_local = serializers.DecimalField(
         max_digits=10, decimal_places=2, coerce_to_string=False, read_only=True
     )
+    # Declared explicitly so DRF doesn't auto-attach its own UniqueValidator
+    # (from the model's unique=True) with its English, harder-to-customize
+    # message. Duplicate detection is handled entirely by validate_isbn() below.
+    isbn = serializers.CharField(max_length=20)
 
     class Meta:
         model = Book

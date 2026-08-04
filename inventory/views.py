@@ -1,5 +1,6 @@
 import logging
 
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -33,6 +34,14 @@ class BookViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'category', str, OpenApiParameter.QUERY, required=True,
+                description='Categoria exacta a buscar (no distingue mayusculas/minusculas).',
+            )
+        ]
+    )
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request: Request) -> Response:
         category = request.query_params.get('category')
@@ -44,6 +53,14 @@ class BookViewSet(viewsets.ModelViewSet):
         books = BookFilter({'category': category}, queryset=self.get_queryset()).qs
         return self._paginated_response(request, books)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'threshold', int, OpenApiParameter.QUERY, required=False,
+                description='Libros con stock_quantity menor o igual a este valor. Default: 10.',
+            )
+        ]
+    )
     @action(detail=False, methods=['get'], url_path='low-stock')
     def low_stock(self, request: Request) -> Response:
         threshold_raw = request.query_params.get('threshold', 10)
@@ -57,6 +74,11 @@ class BookViewSet(viewsets.ModelViewSet):
         books = BookFilter({'threshold': threshold}, queryset=self.get_queryset()).qs
         return self._paginated_response(request, books)
 
+    # request=None: this action takes no body — it only reads the `id` from the
+    # URL. Without this, drf-spectacular infers BookSerializer as the request
+    # body (since that's the viewset's serializer_class) and Swagger shows a
+    # misleading "required" request body that the view never actually reads.
+    @extend_schema(request=None)
     @action(detail=True, methods=['post'], url_path='calculate-price')
     def calculate_price(self, request: Request, pk: str | None = None) -> Response:
         book = self.get_object()
